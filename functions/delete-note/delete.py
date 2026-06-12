@@ -1,23 +1,52 @@
-# add your delete-note function here
 import json
+import os
+
+import boto3
+
+
+table = boto3.resource("dynamodb").Table(os.environ["TABLE_NAME"])
+
+
+def _response(status_code, body):
+    return {
+        "statusCode": status_code,
+        "headers": {
+            "Content-Type": "application/json"
+        },
+        "body": json.dumps(body)
+    }
+
+
+def _request_data(event):
+    params = event.get("queryStringParameters") or {}
+
+    if event.get("body"):
+        try:
+            body = json.loads(event["body"])
+        except json.JSONDecodeError:
+            return None
+        return {**params, **body}
+
+    return params
+
 
 def delete_handler(event, context):
-    print(event)
-    http_method = event["requestContext"]["http"]["method"].lower()
-    invoker = None
+    data = _request_data(event)
 
-    if http_method == "post" or http_method == "put":
-        # POST and PUT use the request body to get info about the request
-        body = json.loads(event["body"])
-        invoker = body["invoker"]
-    elif http_method == "get" or http_method == "delete":
-        # GET and DELETE use query string parameters to get info about the request
-        invoker = event["queryStringParameters"]["invoker"]
-    
-    return {
-        "statusCode": 200,
-        "body": json.dumps({
-            "method": http_method,
-            "invoker": invoker
-        })
-    }
+    if data is None:
+        return _response(400, {"message": "Request body must be valid JSON"})
+
+    email = data.get("email")
+    note_id = data.get("id")
+
+    if not email or not note_id:
+        return _response(400, {"message": "Missing required fields: email and id"})
+
+    table.delete_item(
+        Key={
+            "email": email,
+            "id": note_id
+        }
+    )
+
+    return _response(200, {"deleted": True, "id": note_id})
