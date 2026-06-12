@@ -228,3 +228,15 @@ output "lambda_url2" {
 output "lambda_url3" {
   value = aws_lambda_function_url.save-url.function_url
 }
+
+output "get_notes_url" {
+  value = aws_lambda_function_url.get-url.function_url
+}
+
+output "delete_note_url" {
+  value = aws_lambda_function_url.delete-url.function_url
+}
+
+output "save_note_url" {
+  value = aws_lambda_function_url.save-url.function_url
+}

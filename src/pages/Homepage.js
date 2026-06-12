@@ -4,9 +4,9 @@ import "../style/styles.css";
 import NoteList from "../components/NoteList";
 import { v1 as uuidv1 } from "uuid";
 import { Outlet, useNavigate } from "react-router-dom";
-import { GoogleLogin, googleLogout } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
+import { googleLogout } from "@react-oauth/google";
 import OAuth from "../components/OAuth";
+import { getNotes } from "../api/notesApi";
 
 const Homepage = () => {
   let navigate = useNavigate();
@@ -14,6 +14,16 @@ const Homepage = () => {
   const [showNoteList, setShowNoteList] = useState("true");
   const [noteItems, setNoteItems] = useState([]);
   const [authenticated, setAuthenticated] = useState("false");
+
+  async function loadNotes() {
+    try {
+      const notes = await getNotes();
+      setNoteItems(notes);
+      localStorage.setItem("noteItems", JSON.stringify(notes));
+    } catch (error) {
+      alert(error.message);
+    }
+  }
 
   function toggleList() {
     const newShowList = showNoteList === "true" ? "false" : "true";
@@ -30,6 +40,12 @@ const Homepage = () => {
     setNoteItems(savedNoteItems ? savedNoteItems : []);
     setAuthenticated(savedAuthentication ? savedAuthentication : "false");
   }, []);
+
+  useEffect(() => {
+    if (authenticated === "true") {
+      loadNotes();
+    }
+  }, [authenticated]);
 
   function addNote() {
     const currentDate = new Date();
@@ -49,6 +65,10 @@ const Homepage = () => {
   function logOut() {
     googleLogout();
     localStorage.setItem("authenticated", "false");
+    localStorage.removeItem("email");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("noteItems");
+    setNoteItems([]);
     setAuthenticated("false");
   }
 
@@ -71,7 +91,6 @@ const Homepage = () => {
         {(authenticated ==="false") &&(
           <>
             <OAuth
-              authenticated={authenticated}
               setAuthenticated={setAuthenticated}
             />
           </>

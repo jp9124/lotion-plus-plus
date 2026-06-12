@@ -3,38 +3,64 @@ import "react-quill/dist/quill.snow.css";
 import "../style/Note.css";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
+import { deleteNote, saveNote } from "../api/notesApi";
 
 const NoteEdit = () => {
   let navigate = useNavigate();
   const info = useParams();
-  const noteItems = JSON.parse(localStorage.getItem("noteItems"));
+  const noteItems = JSON.parse(localStorage.getItem("noteItems")) || [];
+  const item = noteItems[info.id - 1];
+  const initialItem = item || {
+    title: "",
+    date: new Date().toISOString(),
+    content: "",
+  };
 
-  const [title, setTitle] = useState(noteItems[info.id - 1].title);
-  const [date, setDate] = useState(noteItems[info.id - 1].date);
-  const [content, setContent] = useState(noteItems[info.id - 1].content);
+  const [title, setTitle] = useState(initialItem.title);
+  const [date, setDate] = useState(initialItem.date);
+  const [content, setContent] = useState(initialItem.content);
 
-  function handleDelete() {
+  if (!item) {
+    return null;
+  }
+
+  async function handleDelete() {
     const answer = window.confirm("Are you sure?");
     if (answer) {
-      localStorage.setItem(
-        "noteItems",
-        JSON.stringify(
-          noteItems.filter((item) => item !== noteItems[info.id - 1])
-        )
-      );
+      try {
+        await deleteNote(item.id);
+        localStorage.setItem(
+          "noteItems",
+          JSON.stringify(
+            noteItems.filter((note) => note.id !== item.id)
+          )
+        );
+        navigate("/notes/");
+      } catch (error) {
+        alert(error.message);
+      }
       window.location.reload();
     }
 
   }
 
-  function handleSave() {
-    const newList = noteItems;
-    newList[info.id - 1].date = new Date(date).toISOString();
-    newList[info.id - 1].title = title;
-    newList[info.id - 1].content = content;
-    localStorage.setItem("noteItems", JSON.stringify(newList));
-    navigate("/notes/" + info.id);
-    window.location.reload();
+  async function handleSave() {
+    try {
+      const newList = noteItems;
+      const savedNote = await saveNote({
+        ...item,
+        date: new Date(date).toISOString(),
+        title,
+        content,
+      });
+
+      newList[info.id - 1] = savedNote;
+      localStorage.setItem("noteItems", JSON.stringify(newList));
+      navigate("/notes/" + info.id);
+      window.location.reload();
+    } catch (error) {
+      alert(error.message);
+    }
   }
   return (
     <div className="Note">

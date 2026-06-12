@@ -1,27 +1,36 @@
 import "../style/Note.css";
 import { useNavigate, useParams } from "react-router-dom";
+import { deleteNote } from "../api/notesApi";
 
 const NoteView = () => {
   let navigate = useNavigate();
 
   const info = useParams();
-  const noteItems =  JSON.parse(localStorage.getItem("noteItems"))
+  const noteItems =  JSON.parse(localStorage.getItem("noteItems")) || []
   
   function handleNoteEdit() {
     navigate("/notes/" + info.id + "/edit")
   }
 
   
-  function handleDelete() {
+  async function handleDelete() {
     const answer = window.confirm("Are you sure?");
     if (answer) {
-      localStorage.setItem("noteItems", JSON.stringify(noteItems.filter(item => item !== noteItems[info.id - 1])))
-      navigate("/notes/")
-
-    window.location.reload();
+      try {
+        await deleteNote(item.id);
+        localStorage.setItem("noteItems", JSON.stringify(noteItems.filter(note => note.id !== item.id)))
+        navigate("/notes/")
+        window.location.reload();
+      } catch (error) {
+        alert(error.message);
+      }
     }
   }
   const item = noteItems[info.id - 1]
+
+  if (!item) {
+    return null;
+  }
 
   const formattedDate =
     new Date(item.date).toLocaleDateString("default", {

@@ -1,14 +1,19 @@
 import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 import "../style/OAuth.css";
 
-const OAuth = (authenticated) => {
+const OAuth = ({ setAuthenticated }) => {
 
-  function handleSuccessfulLogin() {
-    console.log(authenticated)
-    authenticated.setAuthenticated("true");
+  async function handleSuccessfulLogin(response) {
+    const token = response.credential;
+    const profile = jwtDecode(token);
+
+    localStorage.setItem("email", profile.email);
+    localStorage.setItem("access_token", token);
     localStorage.setItem("authenticated","true");
-
+    setAuthenticated("true");
   }
+
   return (
     <div className="OAuth">
       <GoogleLogin
