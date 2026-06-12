@@ -16,6 +16,12 @@ provider "aws" {
   region = "ca-central-1"
 }
 
+variable "google_client_id" {
+  description = "Google OAuth client ID used to validate request tokens."
+  type        = string
+  default     = "904681956384-tkoqgsh0g2f1o38ck8olj13u70ur2f8a.apps.googleusercontent.com"
+}
+
 resource "aws_dynamodb_table" "lotion-30146353-revisited" {
   name         = "lotion-30146353-revisited"
   billing_mode = "PROVISIONED"
@@ -127,7 +133,8 @@ resource "aws_lambda_function" "get" {
 
   environment {
     variables = {
-      TABLE_NAME = aws_dynamodb_table.lotion-30146353-revisited.name
+      GOOGLE_CLIENT_ID = var.google_client_id
+      TABLE_NAME       = aws_dynamodb_table.lotion-30146353-revisited.name
     }
   }
 }
@@ -146,7 +153,8 @@ resource "aws_lambda_function" "delete" {
 
   environment {
     variables = {
-      TABLE_NAME = aws_dynamodb_table.lotion-30146353-revisited.name
+      GOOGLE_CLIENT_ID = var.google_client_id
+      TABLE_NAME       = aws_dynamodb_table.lotion-30146353-revisited.name
     }
   }
 }
@@ -165,7 +173,8 @@ resource "aws_lambda_function" "save" {
 
   environment {
     variables = {
-      TABLE_NAME = aws_dynamodb_table.lotion-30146353-revisited.name
+      GOOGLE_CLIENT_ID = var.google_client_id
+      TABLE_NAME       = aws_dynamodb_table.lotion-30146353-revisited.name
     }
   }
 }
@@ -177,8 +186,8 @@ resource "aws_lambda_function_url" "save-url" {
   cors {
     allow_credentials = false
     allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST", "PUT", "DELETE"]
-    allow_headers     = ["*"]
+    allow_methods     = ["POST"]
+    allow_headers     = ["content-type", "email", "access_token", "access-token", "authorization"]
     expose_headers    = ["keep-alive", "date"]
   }
 }
@@ -190,8 +199,8 @@ resource "aws_lambda_function_url" "get-url" {
   cors {
     allow_credentials = false
     allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST", "PUT", "DELETE"]
-    allow_headers     = ["*"]
+    allow_methods     = ["GET"]
+    allow_headers     = ["content-type", "email", "access_token", "access-token", "authorization"]
     expose_headers    = ["keep-alive", "date"]
   }
 }
@@ -203,8 +212,8 @@ resource "aws_lambda_function_url" "delete-url" {
   cors {
     allow_credentials = false
     allow_origins     = ["*"]
-    allow_methods     = ["GET", "POST", "PUT", "DELETE"]
-    allow_headers     = ["*"]
+    allow_methods     = ["DELETE"]
+    allow_headers     = ["content-type", "email", "access_token", "access-token", "authorization"]
     expose_headers    = ["keep-alive", "date"]
   }
 }
