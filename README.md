@@ -1,4 +1,4 @@
-# Lotion Plus
+# Lotion++
 
 This is similar to the Lotion project from before, but uses Infrastructure as Code (IaC), using Terraform to set up lambda functions and DynamoDB on AWS. In addition, this project uses OAuth as the login method.
 
